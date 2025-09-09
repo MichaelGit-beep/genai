@@ -3,7 +3,7 @@ import sys
 from google import genai
 from google.genai import types
 
-
+# Initialize client for Vertex AI (uses your gcloud auth / service account)
 
 
 def get_current_weather(location: str = "Boston, MA"):
@@ -73,17 +73,13 @@ schedule_meeting_function = {
 }
 
 # Init client - Auth to GCP project
-client = genai.Client(vertexai=True, project="XXXXXXX", location="europe-west4")
+client = genai.Client(vertexai=True, project="XXXXXX", location="europe-west4")
 
 # Chat History. Contains from User and Model contents.
 contents = [
     types.Content(
         role="user",
-        parts=[
-            types.Part(
-                text="Can You check the weather in New York?"
-            )
-        ],
+        parts=[types.Part(text="Can You check the weather in New York?")],
     )
 ]
 
@@ -136,19 +132,21 @@ for part in response.candidates[0].content.parts:
     # Here We Actually executing the function model suggests
     if func_map.get(_func_to_call):
         function_execution_result = func_map[_func_to_call](**function_call.args)
+        # Appening all the contents for the final response:
+        # 1. Innitial question
 
+        # 2. model tool suggestion from latest response
+        contents.append(response.candidates[0].content)
 
-function_response_part = types.Part.from_function_response(
-    name=_func_to_call, response={"result": function_execution_result}
-)
+        function_response_part = types.Part.from_function_response(
+            name=_func_to_call, response={"result": function_execution_result}
+        )
 
-# Appening all the contents for the final response:
-# 1. Innitial question
-# 2. model tool suggestion from latest response
-# 3. Func output
+        # 3. Func output
+        contents.append(types.Content(role="user", parts=[function_response_part]))
 
-contents.append(response.candidates[0].content)
-contents.append(types.Content(role="user", parts=[function_response_part]))
 
 response = generate_model_content(config=config, contents=contents)
-print(response.text) # The weather in New York is partly cloudy with a temperature of 38 degrees and wind speed of 10 mph from the NW.
+print(
+    response.text
+)  # The weather in New York is partly cloudy with a temperature of 38 degrees and wind speed of 10 mph from the NW.
