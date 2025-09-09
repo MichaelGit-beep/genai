@@ -1,7 +1,10 @@
 import os
+
+import dotenv
 from google import genai
 from google.genai.types import ModelContent, Part, UserContent
 
+dotenv.load_dotenv()
 client = genai.Client(vertexai=True, project=os.environ["GCP_PROJECT"], location="europe-west4")
 chat_session = client.chats.create(
     model="gemini-2.5-flash",
