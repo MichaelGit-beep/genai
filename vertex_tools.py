@@ -3,8 +3,6 @@ import sys
 from google import genai
 from google.genai import types
 
-# Initialize client for Vertex AI (uses your gcloud auth / service account)
-
 
 def get_current_weather(location: str = "Boston, MA"):
     """
