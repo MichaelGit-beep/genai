@@ -39,8 +39,24 @@ def get_pod_status(podname: str, namespace: str) -> str:
 
     return ["Ready"]
 
+
+def connect_to_customer_gke(custumer_id: str):
+    """
+    Updates kubectonfig for specific custumer.
+    Should be run before any investigations
+
+    Args:
+        customer_id: str
+    Returns:
+        None
+    """
+
+    print(f"Connecting to {custumer_id}")
+
+
 # Init client - Auth to GCP project
 dotenv.load_dotenv()
+
 client = genai.Client(
     vertexai=True, project=os.environ["GCP_PROJECT"], location="europe-west4"
 )
@@ -49,7 +65,11 @@ client = genai.Client(
 contents = [
     types.Content(
         role="user",
-        parts=[types.Part(text="List all available kubernetes namespaces then check the status for each pod")],
+        parts=[
+            types.Part(
+                text="List all available kubernetes namespaces for custumer xdr-us-81628736123 then check the status for pods across all the namespaces"
+            )
+        ],
     )
 ]
 
@@ -58,7 +78,7 @@ config = types.GenerateContentConfig(
     temperature=0,
     max_output_tokens=500,
     thinking_config=types.ThinkingConfig(thinking_budget=0),
-    tools=[get_pod_status, list_namespaces, list_pods],
+    tools=[get_pod_status, list_namespaces, list_pods, connect_to_customer_gke],
 )
 
 
@@ -75,7 +95,7 @@ def generate_model_content(
 response = generate_model_content(config=config, contents=contents)
 
 
-print(response.text) 
+print(response.text)
 # The status of databases/podA is Ready.
 # The status of databases/podB is Ready.
 # The status of services/podA is Ready.

@@ -76,7 +76,9 @@ schedule_meeting_function = {
 
 # Init client - Auth to GCP project
 dotenv.load_dotenv()
-client = genai.Client(vertexai=True, project=os.environ["GCP_PROJECT"], location="europe-west4")
+client = genai.Client(
+    vertexai=True, project=os.environ["GCP_PROJECT"], location="europe-west4"
+)
 
 # Chat History. Contains from User and Model contents.
 contents = [
