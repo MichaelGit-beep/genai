@@ -20,17 +20,13 @@ def call(func_name, args):
     return functions_map[func_name](**args)
 
 
-def process_response_with_tools_calling(resp):
-    if not resp.candidates[0].content.parts[0].function_call:
-        result = []
-        for candidate in resp.candidates:
-            result = [part.text.strip() for part in candidate.content.parts]
-        return ".".join(result)
+def process_response_with_tools_calling_iterations(resp):
+    while resp.candidates[0].content.parts[0].function_call:
+        for part in resp.candidates[0].content.parts:
+            result = call(part.function_call.name, part.function_call.args)
+            resp = chat.send_message(str(result))
 
-    for part in resp.candidates[0].content.parts:
-        result = call(part.function_call.name, part.function_call.args)
-        resp = chat.send_message(str(result))
-        return process_response_with_tools_calling(resp)
+    return ".".join(part.text for part in resp.candidates[0].content.parts)
 
 
 client = genai.Client(
@@ -63,5 +59,5 @@ resp = chat.send_message("Can you multiply 2*2 and then divide result by 2?")
 functions_map = {"multiply": multiply, "divide": divide}
 
 
-response = process_response_with_tools_calling(resp)
+response = process_response_with_tools_calling_iterations(resp)
 print(response)
